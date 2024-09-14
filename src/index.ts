@@ -19,54 +19,55 @@ fastify.register(import('@fastify/static').then(module => module.default), {
   prefix: '/files/',
 });
 
-// Rota para upload de arquivos
 fastify.post('/upload', async (request: FastifyRequest, reply: FastifyReply) => {
-  try {
-    const data = await request.file();
+    try {
+      const data = await request.file();
+      
+      if (!data) {
+        console.warn('No file uploaded');
+        return reply.status(400).send('No file uploaded');
+      }
+  
+      const ext = path.extname(data.filename);
+      const fileId = uuidv4();
+      const filePath = path.join(__dirname, '../uploads', `${fileId}${ext}`);
+      
+      const clientIp = request.ip;
+      console.log(`Uploading file: ${data.filename}, IP: ${clientIp}`);
+  
+      await new Promise<void>((resolve, reject) => {
+        const writeStream = fs.createWriteStream(filePath);
+        data.file.pipe(writeStream);
+        writeStream.on('finish', () => {
+          console.log(`File saved: ${filePath}`);
+          resolve();
+        });
+        writeStream.on('error', (err) => {
+          console.error('Error saving file', err);
+          reject(err);
+        });
+      });
+  
+      const fileRecord = await prisma.file.create({
+        data: {
+          filename: data.filename,
+          mimetype: data.mimetype,
+          size: data.file.bytesRead,
+          url: `https://share.andrepaiva.dev/files/${fileId}${ext}`,
+          ip: clientIp,
+          fileId: fileId,
+        },
+      });
     
-    if (!data) {
-      console.warn('No file uploaded');
-      return reply.status(400).send('No file uploaded');
+      console.log(`File record created: ${fileRecord.fileId}`);
+  
+      return reply.status(200).send(fileRecord);
+    } catch (error) {
+      console.error('Error handling file upload', error);
+      return reply.status(500).send('Internal Server Error');
     }
-
-    const ext = path.extname(data.filename);
-    const fileId = uuidv4();
-    const filePath = path.join(__dirname, '../uploads', `${fileId}${ext}`);
-    
-    const clientIp = request.ip;
-    console.log(`Uploading file: ${data.filename}, IP: ${clientIp}`);
-
-    await new Promise<void>((resolve, reject) => {
-      const writeStream = fs.createWriteStream(filePath);
-      data.file.pipe(writeStream);
-      writeStream.on('finish', () => {
-        console.log(`File saved: ${filePath}`);
-        resolve();
-      });
-      writeStream.on('error', (err) => {
-        console.error('Error saving file', err);
-        reject(err);
-      });
-    });
+  });
   
-    const fileRecord = await prisma.file.create({
-      data: {
-        filename: data.filename,
-        mimetype: data.mimetype,
-        size: data.file.bytesRead,
-        url: `https://share.andrepaiva.dev/files/${fileId}${ext}`,
-        ip: clientIp,
-        fileId: fileId,
-      },
-    });
-  
-    console.log(`File record created: ${fileRecord.fileId}`);
-    return fileRecord;
-  } catch (error) {
-    console.error('Error handling file upload', error);
-    return reply.status(500).send('Internal Server Error');
-  }
-});
 
 // Rota para documentação
 fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
