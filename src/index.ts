@@ -44,7 +44,7 @@ fastify.post('/upload', async (request: FastifyRequest, reply: FastifyReply) => 
         filename: data.filename,
         mimetype: data.mimetype,
         size: data.file.bytesRead,
-        url: `http://localhost:3000/files/${fileId}${ext}`,
+        url: `https://share.andrepaiv.dev/files/${fileId}${ext}`,
         ip: clientIp,
         fileId: fileId,
       },
