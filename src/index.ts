@@ -12,7 +12,11 @@ const __dirname = path.dirname(__filename);
 const fastify = Fastify({ logger: true });
 const prisma = new PrismaClient();
 
-fastify.register(multipart);
+fastify.register(multipart, {
+    limits: {
+        fileSize: 100 * 1024 * 1024, // Limite de 100MB para o tamanho do arquivo
+    },
+});
 
 fastify.register(import('@fastify/static').then(module => module.default), {
   root: path.join(__dirname, '../uploads'),
