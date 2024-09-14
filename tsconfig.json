@@ -6,7 +6,8 @@
       "rootDir": "./src",
       "strict": true,
       "esModuleInterop": true,
-      "moduleResolution": "NodeNext"
+      "moduleResolution": "NodeNext",
+      "typeRoots": ["./node_modules/@types"]
     },
     "include": ["src/**/*.ts"],
     "exclude": ["node_modules"]
