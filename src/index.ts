@@ -19,24 +19,34 @@ fastify.register(import('@fastify/static').then(module => module.default), {
   prefix: '/files/',
 });
 
+// Rota para upload de arquivos
 fastify.post('/upload', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
     const data = await request.file();
     
     if (!data) {
+      console.warn('No file uploaded');
       return reply.status(400).send('No file uploaded');
     }
-  
+
     const ext = path.extname(data.filename);
     const fileId = uuidv4();
     const filePath = path.join(__dirname, '../uploads', `${fileId}${ext}`);
-  
+    
     const clientIp = request.ip;
-  
+    console.log(`Uploading file: ${data.filename}, IP: ${clientIp}`);
+
     await new Promise<void>((resolve, reject) => {
       const writeStream = fs.createWriteStream(filePath);
       data.file.pipe(writeStream);
-      writeStream.on('finish', resolve);
-      writeStream.on('error', reject);
+      writeStream.on('finish', () => {
+        console.log(`File saved: ${filePath}`);
+        resolve();
+      });
+      writeStream.on('error', (err) => {
+        console.error('Error saving file', err);
+        reject(err);
+      });
     });
   
     const fileRecord = await prisma.file.create({
@@ -44,16 +54,23 @@ fastify.post('/upload', async (request: FastifyRequest, reply: FastifyReply) => 
         filename: data.filename,
         mimetype: data.mimetype,
         size: data.file.bytesRead,
-        url: `https://share.andrepaiv.dev/files/${fileId}${ext}`,
+        url: `https://share.andrepaiva.dev/files/${fileId}${ext}`,
         ip: clientIp,
         fileId: fileId,
       },
     });
   
+    console.log(`File record created: ${fileRecord.fileId}`);
     return fileRecord;
+  } catch (error) {
+    console.error('Error handling file upload', error);
+    return reply.status(500).send('Internal Server Error');
+  }
 });
 
+// Rota para documentação
 fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
     reply.type('text/html').send(`
       <!DOCTYPE html>
       <html>
@@ -82,8 +99,39 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
       </body>
       </html>
     `);
+    console.log('Documentation page served');
+  } catch (error) {
+    console.error('Error serving documentation page', error);
+    return reply.status(500).send('Internal Server Error');
+  }
 });
 
+// Rota para página de erro 404
+fastify.setNotFoundHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    reply.status(404).type('text/html').send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>404 Not Found</title>
+      </head>
+      <body>
+        <h1>404 Not Found</h1>
+        <p>The requested URL ${request.url} was not found on this server.</p>
+        <p>For more information, visit <a href="/">the documentation</a>.</p>
+      </body>
+      </html>
+    `);
+    console.log(`404 error page served for URL: ${request.url}`);
+  } catch (error) {
+    console.error('Error serving 404 page', error);
+    return reply.status(500).send('Internal Server Error');
+  }
+});
+
+// Início do servidor
 fastify.listen({ port: 80, host: '0.0.0.0' }).then(() => {
-    console.log('Server is running on http://localhost:80');
-})
+  console.log('Server is running on http://localhost:80');
+}).catch((err) => {
+  console.error('Error starting server', err);
+});
