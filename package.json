@@ -1,0 +1,35 @@
+{
+  "name": "@adgdevelopment/share-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "format": "prettier --write 'src/**/*.{js,ts}'",
+    "migrate": "prisma migrate dev",
+    "seed": "prisma db seed"
+  },
+  "keywords": [],
+  "author": "euandrelucas",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/static": "^7.0.4",
+    "@prisma/client": "^5.19.1",
+    "@types/node": "^22.5.5",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "prisma": "^5.19.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9.10.0",
+    "prettier": "^3.3.3"
+  }
+}
