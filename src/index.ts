@@ -69,7 +69,7 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
         <pre><code>POST /upload</code></pre>
         <p>Send a <code>multipart/form-data</code> request with the file included in the <code>file</code> field.</p>
         <p>Example using <code>curl</code>:</p>
-        <pre><code>curl -F "file=@/path/to/your/file" http://localhost:3000/upload</code></pre>
+        <pre><code>curl -F "file=@/path/to/your/file" https://files.andrepaiva.dev/upload</code></pre>
   
         <h2>List Files</h2>
         <p>To list all uploaded files, use the following endpoint:</p>
@@ -78,16 +78,12 @@ fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
         <h2>File Access</h2>
         <p>Files can be accessed directly using the URL provided in the response of the upload endpoint.</p>
         <p>Example URL:</p>
-        <pre><code>http://localhost:3000/files/your-file-id.ext</code></pre>
+        <pre><code>https://files.andrepaiva.dev/files/your-file-id.ext</code></pre>
       </body>
       </html>
     `);
 });
 
-fastify.listen(3000, (err, address) => {
-  if (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-  fastify.log.info(`Server listening at ${address}`);
-});
+fastify.listen({ port: 80, host: '0.0.0.0' }).then(() => {
+    console.log('Server is running on http://localhost:80');
+})
